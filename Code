@@ -1,4 +1,4 @@
-local Library = function()
+    print('e');
     local Main = {};
 
     -- Variables
@@ -573,5 +573,3 @@ local Library = function()
     end
 
     return Main;
-end
-return Library();
