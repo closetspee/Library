@@ -574,4 +574,4 @@ local Library = function()
 
     return Main;
 end
-Library();
+return Library();
