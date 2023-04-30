@@ -1,0 +1,466 @@
+---@diagnostic disable
+
+local Library = function()
+    local Main = {};
+
+    -- Variables
+    local Players = game:GetService("Players");
+    local UserInputService = game:GetService("UserInputService");
+    local TweenService = game:GetService("TweenService");
+    local Player = Players.LocalPlayer;
+    local Mouse = Player:GetMouse();
+
+    -- Making Window
+    Main.MakeWindow = function(args)
+        local Window = {};
+
+        -- Making things faster
+        local IN = function(make, target)
+            local created = Instance.new(make, target);
+            return created;
+        end
+        local UIC = function(frame, _args)
+            local UICorner = IN("UICorner", frame);
+            UICorner.CornerRadius = UDim.new(unpack(_args));
+        end
+        local UIS = function(frame, th)
+            local UIStroke = IN("UIStroke", frame);
+            UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+            UIStroke.Thickness = th
+        end
+        local TI = function(time)
+            local Info = TweenInfo.new(
+                time,
+                Enum.EasingStyle.Linear,
+                Enum.EasingDirection.Out,
+                0,
+                false,
+                0
+            )
+
+            return Info;
+        end
+
+        --Dragify
+        local Dragify = function(Frame)
+            local dragToggle = nil;
+            local dragInput = nil;
+            local dragStart = nil;
+            local startPos = nil;
+            local updateInput =  function(input)
+                Delta = input.Position - dragStart;
+                Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + Delta.X, startPos.Y.Scale, startPos.Y.Offset + Delta.Y);
+                TweenService:Create(Frame, TweenInfo.new(0.15), {Position = Position}):Play();
+            end
+            Frame.InputBegan:Connect(function(input)
+                if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and UserInputService:GetFocusedTextBox() == nil then
+                    dragToggle = true
+                    dragStart = input.Position;
+                    startPos = Frame.Position;
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragToggle = false;
+                        end
+                    end)
+                end
+            end)
+            Frame.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                    dragInput = input;
+                end
+            end)
+            UserInputService.InputChanged:Connect(function(input)
+                if input == dragInput and dragToggle then
+                    updateInput(input);
+                end
+            end)
+        end
+
+        --Creating Gui
+        local ScreenGui = IN("ScreenGui", Player.PlayerGui);
+        ScreenGui.IgnoreGuiInset = true;
+        ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+        ScreenGui.Name = args.Name or "Gui";
+
+        local Dragpart = IN("Frame", ScreenGui);
+        Dragpart.Name = "Drag";
+        Dragpart.BackgroundTransparency = 1;
+        Dragpart.Size = UDim2.new(0,300,0,30);
+        Dragpart.Position = UDim2.new(0.349,0,0.289,0);
+        Dragify(Dragpart);
+
+        local Bar = Dragpart:Clone();
+        Bar.Name = "Bar";
+        Bar.Parent = Dragpart;
+        Bar.Position = UDim2.new(0,0,0,0);
+        Bar.BackgroundTransparency = 0;
+        Bar.BackgroundColor3 = Color3.fromRGB(70,70,70);
+        UIC(Bar, {0.5,0});
+        UIS(Bar, 3);
+
+        local CloseButton = IN("TextButton", Bar);
+        CloseButton.BackgroundTransparency = 1;
+        CloseButton.Text = "X";
+        CloseButton.TextScaled = true;
+        CloseButton.Size = UDim2.new(0,30,0,30);
+        CloseButton.Position = UDim2.new(0.9,0,0,0);
+        CloseButton.TextColor3 = Color3.new(0,0,0);
+        CloseButton.Font = Enum.Font.SourceSans;
+
+        local HideButton = IN("TextButton", Bar);
+        HideButton.BackgroundTransparency = 1;
+        HideButton.Text = ">";
+        HideButton.TextScaled = true;
+        HideButton.Size = UDim2.new(0,30,0,30);
+        HideButton.Position = UDim2.new(0.8,0,0,0);
+        HideButton.TextColor3 = Color3.new(0,0,0);
+        HideButton.Font = Enum.Font.SourceSans;
+        HideButton.Rotation = -90;
+
+        local Title = IN("TextLabel", Bar);
+        Title.Text = args.Name;
+        Title.Font = Enum.Font.SourceSans;
+        Title.TextColor3 = Color3.new(0,0,0);
+        Title.Size = UDim2.new(0, 230, 0, 30);
+        Title.Position = UDim2.new(0,0,0,0);
+        Title.BackgroundTransparency = 1;
+        Title.TextScaled = true;
+
+        -- Main Background
+        local Background = IN("CanvasGroup", Dragpart);
+        Background.ZIndex = 0;
+        Background.Name = "Background";
+        Background.Size = UDim2.new(0,300,0,300);
+        Background.Position = UDim2.new(0,0,0,0);
+        Background.BackgroundColor3 = Color3.fromRGB(90,90,90);
+        UIC(Background, {0.05, 0});
+        UIS(Background, 3);
+
+        local Display = IN("Frame", Background);
+        Display.Size = UDim2.new(0,280,0,200);
+        Display.Position = UDim2.new(0.037,0,0.3,0);
+        Display.BackgroundColor3 = Color3.fromRGB(70,70,70);
+        UIC(Display, {0.05, 0});
+        UIS(Display, 3);
+
+        local Displaying = IN("ScrollingFrame", Display);
+        Displaying.BackgroundTransparency = 1;
+        Displaying.Position = UDim2.new(0,0,0.025,0);
+        Displaying.Size = UDim2.new(1,0,0.95,0);
+        Displaying.AutomaticCanvasSize = Enum.AutomaticSize.Y;
+        Displaying.CanvasSize = UDim2.new(0,0,2,0);
+        Displaying.ScrollBarThickness = 5;
+        Displaying.ScrollBarImageColor3 = Color3.new(0,0,0);
+
+        local DisplayingList = IN("UIListLayout", Displaying);
+        DisplayingList.Padding = UDim.new(0,10);
+        DisplayingList.FillDirection = Enum.FillDirection.Vertical;
+        DisplayingList.VerticalAlignment = Enum.VerticalAlignment.Top;
+        DisplayingList.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+
+        local TabsBackground = IN("Frame", Background);
+        TabsBackground.Size = UDim2.new(0,280,0,40);
+        TabsBackground.Position = UDim2.new(0.033,0,0.133,0);
+        TabsBackground.BackgroundColor3 = Color3.fromRGB(70,70,70);
+        UIC(TabsBackground, {0.25, 0});
+        UIS(TabsBackground, 3);
+
+        local Tabs = IN("ScrollingFrame", TabsBackground);
+        Tabs.BackgroundTransparency = 1;
+        Tabs.Position = UDim2.new(0,0,0.022,0);
+        Tabs.Size = UDim2.new(0,280,0,40);
+        Tabs.AutomaticCanvasSize = Enum.AutomaticSize.X;
+        Tabs.CanvasSize = UDim2.new(0,2,0,0);
+        Tabs.ScrollBarThickness = 0;
+        Tabs.ScrollBarImageTransparency = 1;
+
+        local TabsList = IN("UIListLayout", Tabs);
+        TabsList.Padding = UDim.new(0,10);
+        TabsList.FillDirection = Enum.FillDirection.Horizontal;
+        TabsList.VerticalAlignment = Enum.VerticalAlignment.Center;
+        TabsList.HorizontalAlignment = Enum.HorizontalAlignment.Left;
+
+        -- Functions
+        CloseButton.Activated:Connect(function()
+            ScreenGui:Destroy();
+        end)
+
+        local HideOptions = {
+            CanToggle = true;
+            Shown = true;
+        };
+        HideButton.Activated:Connect(function()
+            if HideOptions.CanToggle == true then
+                local Info = TI(0.25);
+                HideOptions.CanToggle = false;
+
+                HideOptions.Shown = not HideOptions.Shown;
+                
+                local r = 90;
+                local t = 1;
+                local s = UDim2.new(0,300,0,30);
+
+                if HideOptions.Shown == true then
+                    r = -90;
+                    t = 0;
+                    s = UDim2.new(0,300,0,300);
+                    Background.Visible = true;
+                end
+
+                local Tween = TweenService:Create(Background, Info, {
+                    Size = s;
+                    GroupTransparency = t;
+                });
+                TweenService:Create(HideButton, Info, {Rotation = r}):Play();
+                TweenService:Create(Background.UIStroke, Info, {Transparency = t}):Play();
+                Tween:Play();
+                Tween.Completed:Wait();
+
+                if not HideOptions.Shown then
+                    Background.Visible = false;
+                end
+
+                HideOptions.CanToggle = true;
+            end
+        end)
+
+        --Make Tab
+        local CurrentTab = nil;
+
+        Window.MakeTab = function(args)
+            local TabOptions = {};
+
+            local Tab = IN("TextButton", Tabs);
+            local Content = IN("Model", Tab);
+            Content.Name = "Content";
+            Tab.Text = args.Title or "Tab";
+            Tab.TextScaled = true;
+            Tab.TextColor3 = Color3.new(0,0,0);
+            Tab.Size = UDim2.new(0,100,0,25);
+            Tab.Font = Enum.Font.SourceSans;
+            Tab.BackgroundColor3 = Color3.fromRGB(50,50,50);
+            UIC(Tab, {0.5,0});
+            UIS(Tab, 3);
+
+            --Creating
+            TabOptions.CreateButton = function(args)
+                local Button = IN("Frame", Content);
+                Button.Size = UDim2.new(0,225,0,25);
+                Button.BackgroundTransparency = 1;
+
+                local PressPart = IN("TextButton", Button);
+                PressPart.Position = UDim2.new(0,0,0,0);
+                PressPart.Size = UDim2.new(1,0,1,0);
+                PressPart.Text = args.Name or "Button";
+                PressPart.Font = Enum.Font.SourceSans;
+                PressPart.BackgroundColor3 = Color3.fromRGB(50,50,50);
+                PressPart.TextColor3 = Color3.new(0,0,0);
+                PressPart.TextScaled = true;
+                UIC(PressPart, {0.5,0});
+                UIS(PressPart, 3);
+
+                PressPart.Activated:Connect(args.Action);
+            end
+
+            TabOptions.CreateToggle = function(args)
+                local F = IN("Frame", Content);
+                F.Size = UDim2.new(0, 225, 0, 25);
+                F.BackgroundColor3 = Color3.fromRGB(70,70,70);
+                UIC(F, {0.5,0});
+                UIS(F, 3);
+
+                local Label = IN("TextLabel", F);
+                Label.Text = args.Name or "Toggle";
+                Label.BackgroundTransparency = 1;
+                Label.TextScaled = true;
+                Label.Font = Enum.Font.SourceSans;
+                Label.Size = UDim2.new(0,150,0,25);
+                Label.Position = UDim2.new(0,0,0,0);
+                Label.TextColor3 = Color3.new(0,0,0);
+
+                local Button = IN("TextButton", F);
+                Button.Size = UDim2.new(0,75,0,25);
+                Button.Position = UDim2.new(0.667,0,0,0);
+                Button.BackgroundColor3 = Color3.fromRGB(50,50,50);
+                Button.Text = "";
+                UIC(Button, {0.5,0});
+                UIS(Button, 3);
+
+                local Ball = IN("Frame", Button);
+                Ball.BackgroundColor3 = Color3.fromRGB(70,70,70);
+                Ball.Size = UDim2.new(0,18,0,18);
+                Ball.Position = UDim2.new(0.093,0,0.12,0);
+                UIC(Ball, {1,0});
+                UIS(Ball, 3);
+
+                --Toggles
+                local Toggled = false;
+                local CanToggle = true;
+                Button.Activated:Connect(function()
+                    if CanToggle == true then
+                        local Info = TI(0.35);
+                        CanToggle = false;
+
+                        Toggled = not Toggled;
+                        args.Action(Toggled);
+
+                        local p = UDim2.new(0.093,0,0.12,0);
+		                local c = Color3.fromRGB(50,50,50);
+                        if Toggled then
+                            p = UDim2.new(0.673,0,0.12,0);
+                            c = Color3.fromRGB(35,35,35);
+                        end
+
+                        local Tween = TweenService:Create(Button, Info, {BackgroundColor3 = c});
+                        TweenService:Create(Ball, Info, {Position = p}):Play();
+                        Tween:Play();
+                        Tween.Completed:Wait();
+
+                        CanToggle = true;
+                    end
+                end)
+            end
+
+            TabOptions.CreateSlider = function(args)
+                local Outline = IN("Frame", Content);
+                Outline.Size = UDim2.new(0,255,0,25);
+                Outline.BackgroundTransparency = 1;
+                UIC(Outline, {0.5,0});
+                UIS(Outline, 3);
+
+                local Main = IN("CanvasGroup", Outline);
+                Main.Size = UDim2.new(1,0,1.04,0);
+                Main.Position = UDim2.new(0,0,0,0);
+                Main.BackgroundTransparency = 1;
+                UIC(Main, {0.5,0});
+
+                local SlidePart = IN("Frame", Main);
+                SlidePart.BackgroundColor3 = Color3.fromRGB(50,50,50);
+                SlidePart.Position = UDim2.new(0,0,0,0);
+                SlidePart.Size = UDim2.new(0,0,0,25);
+                UIC(SlidePart, {0.5,3});
+
+                local PressPart = IN("TextButton", Main);
+                PressPart.Size = UDim2.new(1,0,1,0);
+                PressPart.Position = UDim2.new(0,0,0,0);
+                PressPart.Font = Enum.Font.SourceSans;
+                PressPart.TextXAlignment = Enum.TextXAlignment.Left;
+                PressPart.TextScaled = true;
+                PressPart.TextColor3 = Color3.new(0,0,0);
+                PressPart.Text = "    "..(args.Name or "Slider");
+                PressPart.BackgroundTransparency = 1;
+                PressPart.BorderSizePixel = 0;
+
+                local Ammount = IN("TextLabel", Main);
+                Ammount.Size = UDim2.new(1,0,1,0);
+                Ammount.Position = UDim2.new(0,0,0,0);
+                Ammount.Font = Enum.Font.SourceSans;
+                Ammount.TextXAlignment = Enum.TextXAlignment.Right;
+                Ammount.TextScaled = true;
+                Ammount.TextColor3 = Color3.new(0,0,0);
+                Ammount.Text = "0    ";
+                Ammount.BackgroundTransparency = 1;
+                Ammount.BorderSizePixel = 0;
+
+                local Max = args.Max or 100;
+                local percent;
+                local MousePress = false;
+                local OriginalValue;
+
+                PressPart.MouseButton1Down:Connect(function()
+                    MousePress = true;
+
+                    repeat
+                        task.wait();
+                        percent = math.clamp((Mouse.X-Main.AbsolutePosition.X)/Main.AbsoluteSize.X,0,1);
+                        SlidePart.Size = UDim2.fromScale(percent, 1);
+                        Value = math.round(percent*Max);
+                        if Value ~= OriginalValue then
+                            OriginalValue = Value;
+                            args.Action(Value);
+                        end
+                        Ammount.Text = tostring(Value).."    ";
+                    until MousePress == false;
+                end)
+
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        MousePress = false;
+                    end
+                end)
+            end
+
+            TabOptions.CreateLabel = function(args)
+                local Main = IN("Frame", Content);
+                Main.Size = UDim2.new(0,175,0,25);
+                Main.BackgroundTransparency = 1;
+
+                local Label = IN("TextLabel", Main);
+                Label.Text = args.Title or "New Label";
+                Label.Size = UDim2.new(1, 0, 0.62, 0);
+                Label.Position = UDim2.new(0,0,0.38,0);
+                Label.Font = Enum.Font.SourceSans;
+                Label.TextColor3 = Color3.new(0,0,0);
+                Label.BackgroundColor3 = Color3.fromRGB(70,70,70);
+                Label.TextScaled = true;
+                UIC(Label, {0.5, 0});
+                UIS(Label, 3);
+            end
+
+            TabOptions.CreateTextBox = function(args)
+                local Main = IN("Frame", Content);
+                Main.BackgroundColor3 = Color3.fromRGB(70,70,70);
+                Main.Size = UDim2.new(0,255,0,25);
+                UIC(Main, {0.5,0});
+                UIS(Main, 3);
+
+                local TextBox = IN("TextBox", Main);
+                TextBox.BackgroundTransparency = 1;
+                TextBox.Position = UDim2.new(0,0,0,0);
+                TextBox.Size = UDim2.new(1,0,1,0);
+                TextBox.PlaceholderText = args.PlaceholderText or "Write Text Here";
+                TextBox.Font = Enum.Font.SourceSans;
+                TextBox.TextScaled = true;
+                TextBox.TextColor3 = Color3.new(0,0,0);
+                TextBox.PlaceholderColor3 = Color3.new(0,0,0);
+
+                TextBox.Focused:Connect(function()
+                    Main.BackgroundColor3 = Color3.fromRGB(50,50,50);
+                end)
+
+                TextBox.FocusLost:Connect(function(e)
+                    if e then
+                        args.Output(TextBox.Text);
+                        TextBox.Text = "";
+                    end
+                    Main.BackgroundColor3 = Color3.fromRGB(70,70,70);
+                end)
+            end
+
+            --Tab Switching
+            Tab.Activated:Connect(function()
+                if CurrentTab ~= Tab then
+                    if CurrentTab ~= nil then
+                        for _, v in pairs(Displaying:GetChildren()) do
+                            if v:IsA("Frame") then
+                                v.Parent = CurrentTab.Content;
+                            end
+                        end
+                    end
+                    for _, v in pairs(Content:GetChildren()) do
+                        v.Parent = Displaying;
+                    end
+                    Displaying.CanvasPosition = Vector2.new(0,0);
+                    CurrentTab = Tab;
+                end
+            end)
+
+            return TabOptions;
+        end
+
+        return Window;
+    end
+
+    return Main;
+end
+Library();
