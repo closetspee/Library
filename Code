@@ -1,5 +1,4 @@
-
-    local Main = {};
+local Main = {};
 
     -- Variables
     local Players = game:GetService("Players");
@@ -144,8 +143,8 @@
 
         local Displaying = IN("ScrollingFrame", Display);
         Displaying.BackgroundTransparency = 1;
-        Displaying.Position = UDim2.new(0,0,0.025,0);
-        Displaying.Size = UDim2.new(1,0,0.95,0);
+        Displaying.Position = UDim2.new(0,0,0,0);
+        Displaying.Size = UDim2.new(1,0,1,0);
         Displaying.AutomaticCanvasSize = Enum.AutomaticSize.Y;
         Displaying.CanvasSize = UDim2.new(0,0,2,0);
         Displaying.ScrollBarThickness = 5;
@@ -573,3 +572,4 @@
     end
 
     return Main;
+    print('Loaded');
