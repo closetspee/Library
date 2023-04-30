@@ -1,6 +1,4 @@
----@diagnostic disable
-
-
+local Library = function()
     local Main = {};
 
     -- Variables
@@ -11,7 +9,7 @@
     local Mouse = Player:GetMouse();
 
     -- Making Window
-    Main.MakeWindow = function(args)
+    Main.MakeWindow = function(argsMAIN)
         local Window = {};
 
         -- Making things faster
@@ -80,7 +78,8 @@
         local ScreenGui = IN("ScreenGui", Player.PlayerGui);
         ScreenGui.IgnoreGuiInset = true;
         ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
-        ScreenGui.Name = args.Name or "Gui";
+        ScreenGui.Name = argsMAIN.Name or "Gui";
+        ScreenGui.DisplayOrder = 1000;
 
         local Dragpart = IN("Frame", ScreenGui);
         Dragpart.Name = "Drag";
@@ -118,7 +117,7 @@
         HideButton.Rotation = -90;
 
         local Title = IN("TextLabel", Bar);
-        Title.Text = args.Name;
+        Title.Text = argsMAIN.Name;
         Title.Font = Enum.Font.SourceSans;
         Title.TextColor3 = Color3.new(0,0,0);
         Title.Size = UDim2.new(0, 230, 0, 30);
@@ -437,6 +436,118 @@
                 end)
             end
 
+            TabOptions.CreateDropDown = function(args)
+                local f = IN("Frame", Content);
+                f.Size = UDim2.new(0,225,0,25);
+                f.BackgroundColor3 = Color3.fromRGB(70,70,70);
+                UIC(f, {0.5, 0});
+                UIS(f, 3);
+
+                local l = IN("TextLabel", f);
+                l.BackgroundTransparency = 1;
+                l.Font = Enum.Font.SourceSans;
+                l.TextColor3 = Color3.new(0,0,0);
+                l.Text = args.Name or "Dropdown";
+                l.TextScaled = true;
+                l.Size = UDim2.new(0,120,0,25);
+                l.Position = UDim2.new(0,0,0,0)
+
+                local Button = IN("TextButton", f);
+                Button.BackgroundColor3 = Color3.fromRGB(50,50,50);
+                Button.Position = UDim2.new(0.533,0,0,0);
+                Button.Size = UDim2.new(0,105,0,25);
+                Button.Font = Enum.Font.SourceSans;
+                Button.TextScaled = true;
+                Button.Text = "Dropdown";
+                Button.TextColor3 = Color3.new(0,0,0);
+                UIC(Button, {0.05, 0});
+                UIS(Button, 3);
+
+                local bg = IN("CanvasGroup", Button);
+                bg.Size = UDim2.new(1,0,1,0);
+                bg.GroupTransparency = 1;
+                bg.Visible = false;
+                bg.BackgroundColor3 = Color3.fromRGB(70,70,70);
+                bg.Position = UDim2.new(0,0,0,0);
+                UIC(bg, {0.05, 0});
+
+                local list = IN("ScrollingFrame", bg);
+                list.BackgroundTransparency = 1;
+                list.BorderSizePixel = 0;
+                list.Position = UDim2.new(0,0,0,0);
+                list.Size = UDim2.new(1,0,1.06,0);
+                list.AutomaticCanvasSize = Enum.AutomaticSize.Y;
+                list.CanvasSize = UDim2.new(0,0,2,0);
+                list.ScrollBarThickness = 0;
+                list.ScrollBarImageTransparency = 1;
+        
+                local ListLayout = IN("UIListLayout", list);
+                ListLayout.Padding = UDim.new(0,10);
+                ListLayout.FillDirection = Enum.FillDirection.Vertical;
+                ListLayout.VerticalAlignment = Enum.VerticalAlignment.Top;
+                ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+
+                local Info = TI(0.15);
+                local Closed = true;
+                local CanHit = false;
+
+                local Change_DropDown = function(toggle)
+                    local t = 1;
+                    local t2 = 0;
+                    local s = UDim2.new(0,105,0,25);
+
+                    if toggle then
+                        t = 0;
+                        t2 = 1;
+                        s = UDim2.new(0,105,0,100);
+                        bg.Visible = true;
+                    end
+
+                    local Tween = TweenService:Create(bg, Info, {GroupTransparency = t});
+                    TweenService:Create(Button, Info, {Size = s}):Play();
+                    TweenService:Create(Button, Info, {TextTransparency = t2}):Play();
+                    Tween:Play();
+                    Tween.Completed:Wait();
+                    
+                    if not toggle then
+                        bg.Visible = false;
+                    end
+                end
+
+                Button.Activated:Connect(function()
+                    if Closed == true then
+                        Closed = false;
+                        list.CanvasPosition = Vector2.new(0,0);
+                        Change_DropDown(true);
+                        CanHit = true;
+                    end
+                end)
+
+                if args.Options then
+                    for _, v in pairs(args.Options) do
+                        local b = IN("TextButton", list);
+                        b.Size = UDim2.new(0,80,0,25);
+                        b.BackgroundColor3 = Color3.fromRGB(50,50,50);
+                        b.Font = Enum.Font.SourceSans;
+                        b.Text = v or "Option";
+                        b.TextScaled = true;
+                        b.TextColor3 = Color3.new(0,0,0);
+                        UIC(b, {0.25, 0});
+                        UIS(b, 3);
+
+                        b.Activated:Connect(function()
+                            if CanHit == true then
+                                CanHit = false;
+                                args.CallBack(b.Text);
+                                Button.Text = b.Text;
+                                Change_DropDown(false);
+                                Closed = true;
+                            end
+                        end)
+                    end
+                end
+            end
+
             --Tab Switching
             Tab.Activated:Connect(function()
                 if CurrentTab ~= Tab then
@@ -462,3 +573,5 @@
     end
 
     return Main;
+end
+Library();
