@@ -1,6 +1,6 @@
 ---@diagnostic disable
 
-local Library = function()
+
     local Main = {};
 
     -- Variables
@@ -462,5 +462,3 @@ local Library = function()
     end
 
     return Main;
-end
-Library();
